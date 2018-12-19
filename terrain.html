@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <script src="./node_modules/cesium/Build/Cesium/Cesium.js"></script>
+  <link rel="stylesheet" href="./node_modules/cesium/Build/Cesium/Widgets/widgets.css">
+  <style>
+    *{
+      margin:0;
+      padding:0
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer" style="width: 100vw; height:100vh"></div>
+  <script>
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2MmYyNmI5Yi0xYWYyLTQwMDYtYmNiMi0zOTgzZGI4YjkzYmIiLCJpZCI6NjA0Miwic2NvcGVzIjpbImFzciIsImdjIl0sImlhdCI6MTU0NTA5ODA2OX0.HANjK6uBldp_7RjvgCPmZ8REmDIxMP-mhHxDTIYAP-s';
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+      shouldAnimate : false,
+      timeline:true,
+      baseLayerPicker: false,
+      // vrButton: true
+      navigationHelpButton: false
+    });
+    // Load Cesium World Terrain
+    viewer.terrainProvider = Cesium.createWorldTerrain({
+      requestWaterMask : true, // required for water effects
+      requestVertexNormals : true // required for terrain lighting
+    });
+    // Enable depth testing so things behind the terrain disappear.
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+  </script>
+</body>
+</html>
