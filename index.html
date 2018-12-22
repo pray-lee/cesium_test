@@ -15,7 +15,7 @@
 <body>
   <div id="cesiumContainer" style="width: 100vw; height:100vh"></div>
   <script>
-  
+
   var viewer = new Cesium.Viewer('cesiumContainer', {
     shouldAnimate : true,
     timeline:true,
@@ -24,8 +24,6 @@
     navigationHelpButton: false
   });
 
-  var statusDisplay = document.createElement('div');
-  var fuelDisplay = document.createElement('div');
   var czmlPath = '../../SampleData/';
   var vehicleEntity;
 
@@ -34,22 +32,12 @@
   viewer.dataSources.add(dataSource);
 
   // This demo shows how a single path can be broken up into several CZML streams.
-  var partsToLoad = [{
-    url: 'MultipartVehicle_part1.czml',
-    range: [0, 1500],
+  var partsToLoad = {
+    url: 'MultipartVehicle_part.js',
+    range: [0, 60],
     requested: false,
     loaded: false
-  }, {
-    url: 'MultipartVehicle_part2.czml',
-    range: [1500, 3000],
-    requested: false,
-    loaded: false
-  }, {
-    url: 'MultipartVehicle_part3.czml',
-    range: [3000, 4500],
-    requested: false,
-    loaded: false
-  }];
+  };
 
 
   // Helper function to mark a part as requested, and process it into the dataSource.
@@ -65,37 +53,7 @@
   }
 
   // Load the first part up front.
-  processPart(partsToLoad[0]);
-
-  // Load a new section before the clock naturally gets there.
-  // Note this can't predict when a user may fast-forward to it.
-  var preloadTimeInSeconds = 100;
-
-  viewer.clock.onTick.addEventListener(function(clock) {
-    console.log(clock)
-    console.log(clock.currentTime, clock.startTime)
-    // This example uses time offsets from the start to identify which parts need loading.
-    var timeOffset = Cesium.JulianDate.secondsDifference(clock.currentTime, clock.startTime);
-
-    // Filter the list of parts to just the ones that need loading right now.
-    // Then, process each part that needs loading.
-    partsToLoad.filter(function(part) {
-      return (!part.requested) &&
-      (timeOffset >= part.range[0] - preloadTimeInSeconds) &&
-      (timeOffset <= part.range[1]);
-    }).forEach(function(part) {
-      processPart(part);
-    });
-
-    if (vehicleEntity) {
-      var fuel = vehicleEntity.properties.fuel_remaining.getValue(clock.currentTime);
-      if (Cesium.defined(fuel)) {
-        fuelDisplay.textContent = 'Fuel: ' + fuel.toFixed(2) + ' gal';
-      }
-    }
-  });
-
-
+  processPart(partsToLoad);
 
   </script>
 </body>

@@ -5,17 +5,23 @@
   <title></title>
   <script src="./node_modules/cesium/Build/Cesium/Cesium.js"></script>
   <link rel="stylesheet" href="./node_modules/cesium/Build/Cesium/Widgets/widgets.css">
+  <style>
+    *{
+      margin:0;
+      padding:0
+    }
+  </style>
 </head>
 <body>
   <div id="cesiumContainer" style="width:100vw;height:100vh"></div>
   <script>
     var viewer = new Cesium.Viewer('cesiumContainer', {
       shouldAnimate: true, // Enable animations
-      terrainProvider: Cesium.createWorldTerrain()
+      // terrainProvider: Cesium.createWorldTerrain()
     });
 
     //Enable lighting based on sun/moon positions
-    viewer.scene.globe.enableLighting = true;
+    // viewer.scene.globe.enableLighting = true;
 
     //Enable depth testing so things behind the terrain disappear.
     viewer.scene.globe.depthTestAgainstTerrain = true;
@@ -40,22 +46,23 @@
     //Generate a random circular pattern with varying heights.
     function computeCirclularFlight(lon, lat, radius) {
       var property = new Cesium.SampledPositionProperty();
-      for (var i = 0; i <= 360; i += 45) {
+      for (var i = 0; i <= 360; i += 10) {
         var radians = Cesium.Math.toRadians(i);
         var time = Cesium.JulianDate.addSeconds(start, i, new Cesium.JulianDate());
         var position = Cesium.Cartesian3.fromDegrees(lon + (radius * 1.5 * Math.cos(radians)), lat + (radius * Math.sin(radians)), Cesium.Math.nextRandomNumber() * 500 + 1750);
         property.addSample(time, position);
 
         //Also create a point for each sample we generate.
-        viewer.entities.add({
-          position : position,
-          point : {
-            pixelSize : 8,
-            color : Cesium.Color.TRANSPARENT,
-            outlineColor : Cesium.Color.YELLOW,
-            outlineWidth : 3
-          }
-        });
+        // 线的两端的点
+        // viewer.entities.add({
+        //   position : position,
+        //   point : {
+        //     pixelSize : 8,
+        //     color : Cesium.Color.TRANSPARENT,
+        //     outlineColor : Cesium.Color.RED,
+        //     outlineWidth : 3
+        //   }
+        // });
       }
       return property;
     }
