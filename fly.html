@@ -69,7 +69,7 @@
 
     //Compute the entity position property.
     var position = computeCirclularFlight(-112.110693, 36.0994841, 0.03);
-
+    console.log(position)
     //Actually create the entity
     var entity = viewer.entities.add({
 
@@ -95,10 +95,10 @@
       path : {
         resolution : 1,
         material : new Cesium.PolylineGlowMaterialProperty({
-          glowPower : 0.1,
+          // glowPower : 0.9,
           color : Cesium.Color.YELLOW
         }),
-        width : 10
+        width :10
       }
     });
 

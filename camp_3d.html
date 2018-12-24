@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>cesium</title>
+  <script src="./jquery.min.js"></script>
+  <script src="./node_modules/cesium/Build/Cesium/Cesium.js"></script>
+  <link rel="stylesheet" href="./node_modules/cesium/Build/Cesium/Widgets/widgets.css">
+  <style>
+    *{
+      margin:0;
+      padding:0
+    }
+    .cesium-viewer-bottom{
+      display: none
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer" style="width: 100vw; height:100vh"></div>
+  <script>
+    // init
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+      shouldAnimate : true,
+      timeline: true,
+      terrainProvider: Cesium.createWorldTerrain()
+    });
+
+    //加高山的背面的结构轮廓
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+
+    //增加太阳光
+    viewer.scene.globe.enableLighting = true;
+
+    // 创建飞行轨迹和模型架构
+    $.ajax({
+      type: 'GET',
+      url: 'https://www.57fly.com/api/camp/gisVehiclePositions/findHistoryPositionAndAlarmsBySpecificTime.go?token=9ca276ddb7da37717b32dad211473f8b&vehicleCode=F0000095&beginTime=2018-11-19+15%3A32%3A01&endTime=2018-11-19+16%3A31%3A56&_=1545633638278',
+      dataType: 'json',
+      success: function (data) {
+        data = data.gisVehiclePositions
+        var option = {}
+        option.startTime = Cesium.JulianDate.fromDate(new Date(data[0].reportTime))
+        option.endTime = Cesium.JulianDate.fromDate(new Date(data[data.length-1].reportTime))
+
+        // 设置position
+        var property = new Cesium.SampledPositionProperty()
+        data.forEach(item => {
+          var time = Cesium.JulianDate.fromDate(new Date(item.reportTime))
+          var position = Cesium.Cartesian3.fromDegrees(item.longit, item.lat, 1000)
+          property.addSample(time, position)
+        })
+        option.position = property
+
+        //执行创建方法
+        createModel(viewer, Cesium, option)
+      }
+    })
+
+
+    function createModel(viewer, Cesium, {startTime, endTime, position}){
+      viewer.clock.startTime = startTime.clone();
+      viewer.clock.stopTime = endTime.clone();
+      viewer.clock.currentTime = startTime.clone();
+      viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
+      viewer.clock.multiplier = 10;
+
+      var entity = viewer.entities.add({
+
+        //设置开始时间和结束时间
+        availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+          start: startTime,
+          stop: endTime
+        })]),
+
+        //飞行轨迹数据
+        position: position,
+
+        // 设置机头方向和路径方向一致
+        orientation: new Cesium.VelocityOrientationProperty(position),
+
+        // 飞行器模型
+        model: {
+          uri: '.../../SampleData/models/CesiumAir/Cesium_Air.gltf',
+          minimumPixelSize: 64
+        },
+
+        //路径的相关样式
+        path: {
+          resolution : 1,
+          material : new Cesium.PolylineGlowMaterialProperty({
+            glowPower : 0.9,
+            color : Cesium.Color.YELLOW
+          }),
+          width :10
+        }
+      })
+
+      //设置飞行轨迹圆滑程度
+      //Add button to track the entity as it moves
+      //设置弧度(有直角)
+      // entity.position.setInterpolationOptions({
+      //         interpolationDegree : 1,
+      //         interpolationAlgorithm : Cesium.LinearApproximation
+      //     });
+      //设置弧度圆角
+      entity.position.setInterpolationOptions({
+        interpolationDegree : 5,
+        interpolationAlgorithm : Cesium.LagrangePolynomialApproximation
+      });
+      //也是设置弧度(圆角)
+      // entity.position.setInterpolationOptions({
+      //   interpolationDegree : 2,
+      //   interpolationAlgorithm : Cesium.HermitePolynomialApproximation
+      // });
+
+      // 设置照相机视角
+      viewer.trackedEntity = entity
+    }
+  </script>
+</body>
+</html>

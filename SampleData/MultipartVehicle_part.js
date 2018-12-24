@@ -29,7 +29,7 @@
       },
       "width":[
         {
-          "number":1.0
+          "number":3.0
         }
       ],
       "show":[
@@ -40,7 +40,7 @@
     },
     "position":{
       "interpolationAlgorithm":"LAGRANGE",
-      "interpolationDegree":8,
+      "interpolationDegree":5,
       "epoch":"2012-08-04T16:00:00Z",
       "cartographicDegrees" : [
         0,-122.93797,39.50935,1776,
