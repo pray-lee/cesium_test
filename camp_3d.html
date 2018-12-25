@@ -163,8 +163,10 @@
 
 
     //实时渲染触发
-    viewer.scene.postRender.addEventListener(function(e){
-
+    viewer.scene.preRender.addEventListener(function(e){
+        console.log(viewer.clock.currentTime)
+        var time = viewer.clock.currentTime
+        // console.log(new Date(Cesium.JulianDate.toDate(time)).toLocaleString('en'))
     });
 
   </script>
