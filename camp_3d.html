@@ -23,26 +23,26 @@
     var viewer = new Cesium.Viewer('cesiumContainer', {
       shouldAnimate : true,
       timeline: true,
-      terrainProvider: Cesium.createWorldTerrain()
+      // terrainProvider: Cesium.createWorldTerrain()
     });
 
     //加高山的背面的结构轮廓
     viewer.scene.globe.depthTestAgainstTerrain = true;
 
     //增加太阳光
-    viewer.scene.globe.enableLighting = true;
-    viewer.camera.zoomIn(0);
+    // viewer.scene.globe.enableLighting = true;
+
     // 地球旋转
     (function () {
       window.requestAnimationFrame = (function(){
         return  window.requestAnimationFrame       ||
-                window.webkitRequestAnimationFrame ||
-                window.mozRequestAnimationFrame    ||
-                window.oRequestAnimationFrame      ||
-                window.msRequestAnimationFrame     ||
-                function( callback ){
-                  window.setTimeout(callback, 1000 / 60);
-                };
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame    ||
+        window.oRequestAnimationFrame      ||
+        window.msRequestAnimationFrame     ||
+        function( callback ){
+          window.setTimeout(callback, 1000 / 60);
+        };
       })();
       // requestAnimation实现地球转动
       function doEarthRotate() {
@@ -61,6 +61,7 @@
         var option = {}
         option.startTime = Cesium.JulianDate.fromDate(new Date(data[0].reportTime))
         option.endTime = Cesium.JulianDate.fromDate(new Date(data[data.length-1].reportTime))
+        option.cameraInitData = data[0]
 
         // 设置position
         var property = new Cesium.SampledPositionProperty()
@@ -76,12 +77,21 @@
         //   //清除模型
         //   viewer.entities.removeAll()
         // }, 5000)
-        // createModel(viewer, Cesium, option)
+        createModel(viewer, Cesium, option)
       }
     })
 
 
-    function createModel(viewer, Cesium, {startTime, endTime, position}){
+    function createModel(viewer, Cesium, {startTime, endTime, position, cameraInitData}){
+      // 飞到轨迹的开始位置
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(cameraInitData.longit, cameraInitData.lat, 2000),
+        duration: 8,
+        orientation: {
+          roll : 0.0,
+        },
+      })
+
       viewer.clock.startTime = startTime.clone();
       viewer.clock.stopTime = endTime.clone();
       viewer.clock.currentTime = startTime.clone();
@@ -109,9 +119,6 @@
           uri: '.../../SampleData/models/CesiumAir/Cesium_Air.gltf',
           minimumPixelSize: 64
         },
-        // viewForm: {
-        //   "cartesian": [ 500, 1000, 10000000 ]
-        // },
         //路径的相关样式
         path: {
           resolution : 1,
@@ -143,6 +150,7 @@
 
       // 设置跟踪模型
       viewer.trackedEntity = entity
+
     }
 
     // 时间变化就会执行
@@ -155,9 +163,9 @@
 
 
     //实时渲染触发
-    // viewer.scene.postRender.addEventListener(function(e){
-    //    console.log('render')
-    // });
+    viewer.scene.postRender.addEventListener(function(e){
+
+    });
 
   </script>
 </body>
