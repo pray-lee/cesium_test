@@ -27,10 +27,6 @@
       infoBox: true
     });
 
-    var scene = viewer.scene
-    console.log(scene)
-    scene.screenSpaceCameraController.enableRotate = true;
-
 
     viewer.scene.globe.enableLighting = true;
 
@@ -87,9 +83,10 @@
         ++i;
         cameraChanged.innerText = 'Camera Changed: ' + i + ', ' + percentage.toFixed(6);
         cameraChanged.style.display = 'block';
+        viewer.camera.lookAt(new Cesium.Cartesian3())
       });
     }
-    // listenMouseChange()
+    listenMouseChange()
   </script>
 </body>
 </html>

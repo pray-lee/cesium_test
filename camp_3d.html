@@ -31,7 +31,26 @@
 
     //增加太阳光
     viewer.scene.globe.enableLighting = true;
-
+    viewer.camera.zoomIn(0);
+    // 地球旋转
+    (function () {
+      window.requestAnimationFrame = (function(){
+        return  window.requestAnimationFrame       ||
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame    ||
+                window.oRequestAnimationFrame      ||
+                window.msRequestAnimationFrame     ||
+                function( callback ){
+                  window.setTimeout(callback, 1000 / 60);
+                };
+      })();
+      // requestAnimation实现地球转动
+      function doEarthRotate() {
+        viewer.camera.rotateRight(0.0008)
+        requestAnimationFrame(doEarthRotate)
+      }
+      requestAnimationFrame(doEarthRotate)
+    })()
     // 创建飞行轨迹和模型架构
     $.ajax({
       type: 'GET',
@@ -53,22 +72,23 @@
         option.position = property
 
         //执行创建方法
-        setTimeout(function () {
-          //清除模型
-          viewer.entities.removeAll()
-        }, 5000)
-        createModel(viewer, Cesium, option)
+        // setTimeout(function () {
+        //   //清除模型
+        //   viewer.entities.removeAll()
+        // }, 5000)
+        // createModel(viewer, Cesium, option)
       }
     })
 
 
     function createModel(viewer, Cesium, {startTime, endTime, position}){
-
       viewer.clock.startTime = startTime.clone();
       viewer.clock.stopTime = endTime.clone();
       viewer.clock.currentTime = startTime.clone();
       viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
       viewer.clock.multiplier = 10;
+      //底部时间条控件调整
+      viewer.timeline.zoomTo(startTime, endTime);
 
       var entity = viewer.entities.add({
 
@@ -89,15 +109,17 @@
           uri: '.../../SampleData/models/CesiumAir/Cesium_Air.gltf',
           minimumPixelSize: 64
         },
-
+        // viewForm: {
+        //   "cartesian": [ 500, 1000, 10000000 ]
+        // },
         //路径的相关样式
         path: {
           resolution : 1,
           material : new Cesium.PolylineGlowMaterialProperty({
-            glowPower : 0.9,
+            glowPower : 0.5,
             color : Cesium.Color.YELLOW
           }),
-          width :10
+          width :5
         }
       })
 
@@ -119,9 +141,23 @@
       //   interpolationAlgorithm : Cesium.HermitePolynomialApproximation
       // });
 
-      // 设置照相机视角
+      // 设置跟踪模型
       viewer.trackedEntity = entity
     }
+
+    // 时间变化就会执行
+    // viewer.clock.onTick.addEventListener(function(clock){
+    //   console.log('hahahahah')
+    //   if(viewer.trackedEntity){
+    //     console.log(viewer.trackedEntity.position)
+    //   }
+    // })
+
+
+    //实时渲染触发
+    // viewer.scene.postRender.addEventListener(function(e){
+    //    console.log('render')
+    // });
 
   </script>
 </body>
