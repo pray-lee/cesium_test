@@ -21,10 +21,33 @@
   <script>
     // init
     var viewer = new Cesium.Viewer('cesiumContainer', {
+      // imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+      //   url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+      // }),     // arcgis资源
+      imageryProvider : new Cesium.WebMapTileServiceImageryProvider({
+        url: "http://t0.tianditu.com/vec_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=vec&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles",
+        layer: "tdtVecBasicLayer",
+        style: "default",
+        format: "image/jpeg",
+        show: false
+      }),
+      baseLayerPicker: false,
       shouldAnimate : true,
       timeline: true,
-      // terrainProvider: Cesium.createWorldTerrain()
+      // terrainProvider: new Cesium.CesiumTerrainProvider({
+      //   url: 'https://assets.agi.com/stk-terrain/world',
+      // }) //地形服务
     });
+
+    // 增加底图图层
+    // viewer.imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
+    //   url: "http://t0.tianditu.com/cva_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cva&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles",
+    //   layer: "tdtAnnoLayer",
+    //   style: "default",
+    //   format: "image/jpeg",
+    //   tileMatrixSetID: "GoogleMapsCompatible",
+    //   show: false
+    // }));
 
     //加高山的背面的结构轮廓
     viewer.scene.globe.depthTestAgainstTerrain = true;
@@ -49,7 +72,7 @@
         viewer.camera.rotateRight(0.0008)
         requestAnimationFrame(doEarthRotate)
       }
-      requestAnimationFrame(doEarthRotate)
+      // requestAnimationFrame(doEarthRotate)
     })()
     // 创建飞行轨迹和模型架构
     $.ajax({
@@ -58,16 +81,30 @@
       dataType: 'json',
       success: function (data) {
         data = data.gisVehiclePositions
+        console.log(data)
+        //数据重组
+        var dataObj = {}
+        data.forEach(function(item){
+          dataObj[new Date(item.reportTime)] = {
+            lat: item.lat,
+            lon: item.longit,
+            speed: item.speed,
+            height: item.height
+          }
+        })
+        var dataObjKey = Object.keys(dataObj)
+
+        // 构造模型的数据
         var option = {}
-        option.startTime = Cesium.JulianDate.fromDate(new Date(data[0].reportTime))
-        option.endTime = Cesium.JulianDate.fromDate(new Date(data[data.length-1].reportTime))
-        option.cameraInitData = data[0]
+        option.startTime = Cesium.JulianDate.fromDate(new Date(dataObjKey[0]))
+        option.endTime = Cesium.JulianDate.fromDate(new Date(dataObjKey[dataObjKey.length-1]))
+        option.cameraInitData = dataObj[dataObjKey[0]]
 
         // 设置position
         var property = new Cesium.SampledPositionProperty()
-        data.forEach(item => {
-          var time = Cesium.JulianDate.fromDate(new Date(item.reportTime))
-          var position = Cesium.Cartesian3.fromDegrees(item.longit, item.lat, 1000)
+        dataObjKey.forEach(item => {
+          var time = Cesium.JulianDate.fromDate(new Date(item))
+          var position = Cesium.Cartesian3.fromDegrees(dataObj[item].lon, dataObj[item].lat, dataObj[item].height)
           property.addSample(time, position)
         })
         option.position = property
@@ -78,20 +115,29 @@
         //   viewer.entities.removeAll()
         // }, 5000)
         createModel(viewer, Cesium, option)
+
+        // 时间变化就会执行
+        viewer.clock.onTick.addEventListener(function(clock){
+          let tempTime = new Date(Cesium.JulianDate.toDate(clock.currentTime))
+          if(dataObj[tempTime] !== undefined){
+            // console.log(dataObj[tempTime].speed, dataObj[tempTime].height)
+            console.log(dataObj[tempTime].height)
+          }
+        })
+
       }
     })
-
-
     function createModel(viewer, Cesium, {startTime, endTime, position, cameraInitData}){
       // 飞到轨迹的开始位置
       viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(cameraInitData.longit, cameraInitData.lat, 2000),
-        duration: 8,
+        destination: Cesium.Cartesian3.fromDegrees(cameraInitData.lon, cameraInitData.lat, Number(cameraInitData.height)+1000),
+        duration: 5,
         orientation: {
           roll : 0.0,
         },
       })
 
+      // 运动时间相关
       viewer.clock.startTime = startTime.clone();
       viewer.clock.stopTime = endTime.clone();
       viewer.clock.currentTime = startTime.clone();
@@ -117,7 +163,7 @@
         // 飞行器模型
         model: {
           uri: '.../../SampleData/models/CesiumAir/Cesium_Air.gltf',
-          minimumPixelSize: 64
+          minimumPixelSize: 32,
         },
         //路径的相关样式
         path: {
@@ -153,21 +199,6 @@
 
     }
 
-    // 时间变化就会执行
-    // viewer.clock.onTick.addEventListener(function(clock){
-    //   console.log('hahahahah')
-    //   if(viewer.trackedEntity){
-    //     console.log(viewer.trackedEntity.position)
-    //   }
-    // })
-
-
-    //实时渲染触发
-    viewer.scene.preRender.addEventListener(function(e){
-        console.log(viewer.clock.currentTime)
-        var time = viewer.clock.currentTime
-        // console.log(new Date(Cesium.JulianDate.toDate(time)).toLocaleString('en'))
-    });
 
   </script>
 </body>
