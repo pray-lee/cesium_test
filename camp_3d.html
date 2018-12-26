@@ -21,53 +21,39 @@
   <script>
   // init
   var viewer = new Cesium.Viewer('cesiumContainer', {
-    imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
-      url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
-    }),     // arcgis资源
-    terrainProvider: Cesium.createWorldTerrain(),
+    imageryProvider:new Cesium.UrlTemplateImageryProvider({
+      url:"http://mt1.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}&s=Gali"
+    }),
+    terrainExaggeration : 2.0,
+    terrainProvider: Cesium.createWorldTerrain({
+      requestWaterMask: true,
+      requestVertexNormals: true
+    }),
     baseLayerPicker: false,
     shouldAnimate : true,
     timeline: true,
   });
-  // 天地图
-  viewer.imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
-    url: "http://t0.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles",
-    layer: "tdtImgBasicLayer",
-    style: "default",
-    format: "image/jpeg",
-    tileMatrixSetID: "GoogleMapsCompatible",
-    show: false
-  }));
-  viewer.imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
-    url: "http://t0.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles",
-    layer: "tdtImgAnnoLayer",
-    style: "default",
-    format: "image/jpeg",
-    tileMatrixSetID: "GoogleMapsCompatible",
-    show: false
-  }));
-
   //增加太阳光
   viewer.scene.globe.enableLighting = true;
   // 地球旋转
-  // (function () {
-  //   window.requestAnimationFrame = (function(){
-  //     return  window.requestAnimationFrame       ||
-  //     window.webkitRequestAnimationFrame ||
-  //     window.mozRequestAnimationFrame    ||
-  //     window.oRequestAnimationFrame      ||
-  //     window.msRequestAnimationFrame     ||
-  //     function( callback ){
-  //       window.setTimeout(callback, 1000 / 60);
-  //     };
-  //   })();
-  //   // requestAnimation实现地球转动
-  //   function doEarthRotate() {
-  //     viewer.camera.rotateRight(0.0005)
-  //     requestAnimationFrame(doEarthRotate)
-  //   }
-  //   // requestAnimationFrame(doEarthRotate)
-  // })()
+  (function () {
+    window.requestAnimationFrame = (function(){
+      return  window.requestAnimationFrame       ||
+      window.webkitRequestAnimationFrame ||
+      window.mozRequestAnimationFrame    ||
+      window.oRequestAnimationFrame      ||
+      window.msRequestAnimationFrame     ||
+      function( callback ){
+        window.setTimeout(callback, 1000 / 60);
+      };
+    })();
+    // requestAnimation实现地球转动
+    function doEarthRotate() {
+      // viewer.camera.rotateRight(0.0005)
+      requestAnimationFrame(doEarthRotate)
+    }
+    requestAnimationFrame(doEarthRotate)
+  })()
   // 创建飞行轨迹和模型架构
   $.ajax({
     type: 'GET',
@@ -76,21 +62,24 @@
     success: function (data) {
       data = data.gisVehiclePositions
       console.log(data)
-      var result = formatData(data)
 
-      // 构造模型的数据
-      var option = createDataModel(result)
       //执行创建方法
       // setTimeout(function () {
       //   //清除模型
       //   viewer.entities.removeAll()
       // }, 5000)
-      //创建动画
-      createAnimation(option)
-      //创建监听
-      createListener(result)
+      begin(data)
     }
   })
+  // 所有函数组合
+  function begin (data) {
+    var result = formatData(data)
+    var option = createDataModel(result)
+    //创建动画
+    createAnimation(option)
+    //创建监听
+    createListener(result)
+  }
   //数据重组
   function formatData(data) {
     //数据重组
@@ -127,76 +116,82 @@
   //创建动画及模型
   function createAnimation({startTime, endTime, position, cameraInitData}){
     // 飞到轨迹的开始位置
-    // viewer.camera.flyTo({
-    //   destination: Cesium.Cartesian3.fromDegrees(cameraInitData.lon, cameraInitData.lat, Number(cameraInitData.height)),
-    //   duration: 5,
-    //   orientation: {
-    //     heading: 75.0,
-    //     roll : 0.0,
-    //   },
-    // })
-
-    // 运动时间相关
-    viewer.clock.startTime = startTime.clone();
-    viewer.clock.stopTime = endTime.clone();
-    viewer.clock.currentTime = startTime.clone();
-    viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
-    viewer.clock.multiplier = 10;
-    //底部时间条控件调整
-    viewer.timeline.zoomTo(startTime, endTime);
-
-    var entity = viewer.entities.add({
-
-      //设置开始时间和结束时间
-      availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
-        start: startTime,
-        stop: endTime
-      })]),
-
-      //飞行轨迹数据
-      position: position,
-
-      // 设置机头方向和路径方向一致
-      orientation: new Cesium.VelocityOrientationProperty(position),
-
-      // 飞行器模型
-      model: {
-        uri: '.../../SampleData/models/CesiumAir/Cesium_Air.gltf',
-        minimumPixelSize: 50,
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(cameraInitData.lon, cameraInitData.lat, Number(cameraInitData.height)+500),
+      orientation: {
+        heading : Cesium.Math.toRadians(20.0),
+        pitch : Cesium.Math.toRadians(-20.0),
+        roll:0.0
       },
-      //路径的相关样式
-      path: {
-        resolution : 1,
-        material : new Cesium.PolylineGlowMaterialProperty({
-          glowPower : 0.5,
-          color : Cesium.Color.YELLOW
-        }),
-        width :5
+      complete: function () {
+        viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(cameraInitData.lon, cameraInitData.lat, Number(cameraInitData.height)+500), new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0))
+        // 运动时间相关
+        viewer.clock.startTime = startTime.clone();
+        viewer.clock.stopTime = endTime.clone();
+        viewer.clock.currentTime = startTime.clone();
+        viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
+        viewer.clock.multiplier = 10;
+        //底部时间条控件调整
+        viewer.timeline.zoomTo(startTime, endTime);
+
+        var entity = viewer.entities.add({
+
+          //设置开始时间和结束时间
+          availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+            start: startTime,
+            stop: endTime
+          })]),
+
+          //飞行轨迹数据
+          position: position,
+
+          // 设置机头方向和路径方向一致
+          orientation: new Cesium.VelocityOrientationProperty(position),
+
+          // 飞行器模型
+          model: {
+            uri: '.../../SampleData/models/CesiumAir/Cesium_Air.gltf',
+            minimumPixelSize: 64,
+          },
+          //路径的相关样式
+          path: {
+            resolution : 1,
+            material : new Cesium.PolylineGlowMaterialProperty({
+              glowPower : 0.5,
+              color : Cesium.Color.YELLOW
+            }),
+            width :8,
+            leadTime : 0,
+            trailTime : 100000,
+          }
+        })
+
+        //设置飞行轨迹圆滑程度
+        //Add button to track the entity as it moves
+        //设置弧度(有直角)
+        // entity.position.setInterpolationOptions({
+        //         interpolationDegree : 1,
+        //         interpolationAlgorithm : Cesium.LinearApproximation
+        //     });
+        //设置弧度圆角
+        entity.position.setInterpolationOptions({
+          interpolationDegree : 5,
+          interpolationAlgorithm : Cesium.LagrangePolynomialApproximation
+        });
+        //也是设置弧度(圆角)
+        // entity.position.setInterpolationOptions({
+        //   interpolationDegree : 2,
+        //   interpolationAlgorithm : Cesium.HermitePolynomialApproximation
+        // });
+
+        // 设置跟踪模型
+        viewer.trackedEntity = entity
       }
     })
 
-    //设置飞行轨迹圆滑程度
-    //Add button to track the entity as it moves
-    //设置弧度(有直角)
-    // entity.position.setInterpolationOptions({
-    //         interpolationDegree : 1,
-    //         interpolationAlgorithm : Cesium.LinearApproximation
-    //     });
-    //设置弧度圆角
-    entity.position.setInterpolationOptions({
-      interpolationDegree : 5,
-      interpolationAlgorithm : Cesium.LagrangePolynomialApproximation
-    });
-    //也是设置弧度(圆角)
-    // entity.position.setInterpolationOptions({
-    //   interpolationDegree : 2,
-    //   interpolationAlgorithm : Cesium.HermitePolynomialApproximation
-    // });
-
-    // 设置跟踪模型
-    // viewer.trackedEntity = entity
 
   }
+  // 创建监听设置高度和速度等相关信息
   function createListener(result) {
     viewer.clock.onTick.addEventListener(function(clock){
       let tempTime = new Date(Cesium.JulianDate.toDate(clock.currentTime))
