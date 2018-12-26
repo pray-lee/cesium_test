@@ -33,7 +33,13 @@
     shouldAnimate : true,
     timeline: true,
   });
-  //增加太阳光
+  console.log(viewer.scene)
+  viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000;//相机的高度的最小值
+	viewer.scene.screenSpaceCameraController.maximumZoomDistance = 22000000;  //相机高度的最大值
+	viewer.scene.screenSpaceCameraController._minimumZoomRate = 300; // 设置相机缩小时的速率
+	viewer.scene.screenSpaceCameraController._maximumZoomRate=5906376272000    //设置相机放大时的速率
+  // viewer.scene.screenSpaceCameraController.enableRotate = false;
+  // 给地图家光线
   viewer.scene.globe.enableLighting = true;
   // 地球旋转
   (function () {
