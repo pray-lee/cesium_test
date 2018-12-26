@@ -80,6 +80,7 @@
     function listenMouseChange(){
       var i=0
       viewer.camera.changed.addEventListener(function(percentage) {
+        console.log(i)
         ++i;
         cameraChanged.innerText = 'Camera Changed: ' + i + ', ' + percentage.toFixed(6);
         cameraChanged.style.display = 'block';
