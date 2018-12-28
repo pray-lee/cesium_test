@@ -5,6 +5,7 @@
   <title>cesium</title>
   <script src="./jquery.min.js"></script>
   <script src="./node_modules/cesium/Build/Cesium/Cesium.js"></script>
+  <script src='./require.js'></script>
   <link rel="stylesheet" href="./node_modules/cesium/Build/Cesium/Widgets/widgets.css">
   <style>
   *{
@@ -24,7 +25,7 @@
     imageryProvider:new Cesium.UrlTemplateImageryProvider({
       url:"http://mt1.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}&s=Gali"
     }),
-    terrainExaggeration : 2.0,
+    terrainExaggeration : 1, // 增加山的视觉效果（高度,值越大，高度越不准确）
     terrainProvider: Cesium.createWorldTerrain({
       requestWaterMask: true,
       requestVertexNormals: true
@@ -32,12 +33,13 @@
     baseLayerPicker: false,
     shouldAnimate : true,
     timeline: true,
+    scene3DOnly:true
   });
-  viewer.scene.screenSpaceCameraController.minimumZoomDistance = 60;//相机的高度的最小值
+  viewer.scene.screenSpaceCameraController.minimumZoomDistance = 600;//相机的高度的最小值
   viewer.scene.screenSpaceCameraController.maximumZoomDistance = 22000000;  //相机高度的最大值
   viewer.scene.screenSpaceCameraController._minimumZoomRate = 300; // 设置相机缩小时的速率
   viewer.scene.screenSpaceCameraController._maximumZoomRate=5906376272000    //设置相机放大时的速率
-  // viewer.scene.screenSpaceCameraController.enableRotate = false;
+  // viewer.scene.globe.depthTestAgainstTerrain = true;
   // 给地图家光线
   viewer.scene.globe.enableLighting = true;
   // 地球旋转
@@ -54,15 +56,15 @@
     })();
     // requestAnimation实现地球转动
     function doEarthRotate() {
-      // viewer.camera.rotateRight(0.0005)
+      viewer.camera.rotateRight(0.0005)
       requestAnimationFrame(doEarthRotate)
     }
-    requestAnimationFrame(doEarthRotate)
+    // requestAnimationFrame(doEarthRotate)
   })()
   // 创建飞行轨迹和模型架构
   $.ajax({
     type: 'GET',
-    url: 'https://www.57fly.com/api/camp/gisVehiclePositions/findHistoryPositionAndAlarmsBySpecificTime.go?token=9ca276ddb7da37717b32dad211473f8b&vehicleCode=F0000095&beginTime=2018-11-19+15%3A32%3A01&endTime=2018-11-19+16%3A31%3A56&_=1545633638278',
+    url: '.../../SampleData/data/5.json',
     dataType: 'json',
     success: function (data) {
       data = data.gisVehiclePositions
@@ -112,7 +114,7 @@
     var property = new Cesium.SampledPositionProperty()
     result.keys.forEach(item => {
       var time = Cesium.JulianDate.fromDate(new Date(item))
-      var position = Cesium.Cartesian3.fromDegrees(result.data[item].lon, result.data[item].lat, result.data[item].height)
+      var position = Cesium.Cartesian3.fromDegrees(result.data[item].lon, result.data[item].lat, Number(result.data[item].height))
       property.addSample(time, position)
     })
     option.position = property
@@ -194,19 +196,16 @@
         viewer.trackedEntity = entity
       }
     })
-
-
   }
   // 创建监听设置高度和速度等相关信息
   function createListener(result) {
     viewer.clock.onTick.addEventListener(function(clock){
       let tempTime = new Date(Cesium.JulianDate.toDate(clock.currentTime))
       if(result[tempTime] !== undefined){
-        console.log(result[tempTime].height)
+        // console.log(result[tempTime].height)
       }
     })
   }
-
 
   // 时间轴转换方法
   function localeDateTimeFormatter(datetime, viewModel, ignoredate) {
@@ -230,6 +229,14 @@
     return localeDateTimeFormatter(time, viewModel, true);
   }
 
+  var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function(click) {
+           // 处理鼠标按下事件
+           // 获取鼠标当前位置
+            var position = viewer.scene.camera.position.clone()
+            var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(position.x,position.y));
+            viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(position.x, position.y, Math.random()*(300,1000)));
+         }, Cesium.ScreenSpaceEventType.LEFT_UP);
   </script>
 </body>
 </html>
