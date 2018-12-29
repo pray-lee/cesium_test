@@ -5,12 +5,18 @@
   <title>cesium</title>
   <script src="./jquery.min.js"></script>
   <script src="./node_modules/cesium/Build/Cesium/Cesium.js"></script>
+  <script src="./canvas/speed.js"></script>
   <script src='./require.js'></script>
   <link rel="stylesheet" href="./node_modules/cesium/Build/Cesium/Widgets/widgets.css">
   <style>
   *{
     margin:0;
     padding:0
+  }
+  #speed{
+    position:absolute;
+    top:10px;
+    left:0
   }
   .cesium-viewer-bottom{
     display: none
@@ -19,6 +25,8 @@
 </head>
 <body>
   <div id="cesiumContainer" style="width: 100vw; height:100vh"></div>
+  <canvas id="speed" width="260" height="260"></canvas>
+  <canvas id="height" width="0" height="0"></canvas>
   <script>
   // init
   var viewer = new Cesium.Viewer('cesiumContainer', {
