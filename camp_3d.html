@@ -5,7 +5,6 @@
   <title>cesium</title>
   <script src="./jquery.min.js"></script>
   <script src="./node_modules/cesium/Build/Cesium/Cesium.js"></script>
-  <script src="./canvas/speed.js"></script>
   <script src='./require.js'></script>
   <link rel="stylesheet" href="./node_modules/cesium/Build/Cesium/Widgets/widgets.css">
   <style>
@@ -25,25 +24,39 @@
 </head>
 <body>
   <div id="cesiumContainer" style="width: 100vw; height:100vh"></div>
-  <canvas id="speed" width="260" height="260"></canvas>
-  <canvas id="height" width="0" height="0"></canvas>
   <script>
   // init
   var viewer = new Cesium.Viewer('cesiumContainer', {
-    imageryProvider:new Cesium.UrlTemplateImageryProvider({
-      url:"http://mt1.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}&s=Gali"
+    // 天地图服务
+    imageryProvider : new Cesium.WebMapTileServiceImageryProvider({
+        url: "http://t0.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles",
+        layer: "tdtVecBasicLayer",
+        style: "default",
+        format: "image/jpeg",
+        tileMatrixSetID: "GoogleMapsCompatible",
+        show: false
     }),
     terrainExaggeration : 1, // 增加山的视觉效果（高度,值越大，高度越不准确）
     terrainProvider: Cesium.createWorldTerrain({
-      requestWaterMask: true,
-      requestVertexNormals: true
     }),
     baseLayerPicker: false,
     shouldAnimate : true,
     timeline: true,
-    scene3DOnly:true
+    scene3DOnly:true,
+    homeButton: false, // home图标显示隐藏
+    navigationHelpButton: false, // 帮助按钮显示隐藏
+    geocoder: false // 搜索框显示隐藏
   });
-  viewer.scene.screenSpaceCameraController.minimumZoomDistance = 600;//相机的高度的最小值
+  //天地图中文标记图层
+  viewer.imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
+    url: "http://t0.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg",
+    layer: "tdtAnnoLayer",
+    style: "default",
+    format: "image/jpeg",
+    tileMatrixSetID: "GoogleMapsCompatible",
+    show: false
+}));
+  viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000;//相机的高度的最小值
   viewer.scene.screenSpaceCameraController.maximumZoomDistance = 22000000;  //相机高度的最大值
   viewer.scene.screenSpaceCameraController._minimumZoomRate = 300; // 设置相机缩小时的速率
   viewer.scene.screenSpaceCameraController._maximumZoomRate=5906376272000    //设置相机放大时的速率
@@ -67,23 +80,31 @@
       viewer.camera.rotateRight(0.0005)
       requestAnimationFrame(doEarthRotate)
     }
-    // requestAnimationFrame(doEarthRotate)
+    requestAnimationFrame(doEarthRotate)
   })()
-  // 创建飞行轨迹和模型架构
-  $.ajax({
-    type: 'GET',
-    url: '.../../SampleData/data/5.json',
-    dataType: 'json',
-    success: function (data) {
-      data = data.gisVehiclePositions
-      console.log(data)
-
-      //执行创建方法
-      // setTimeout(function () {
-      //   //清除模型
-      //   viewer.entities.removeAll()
-      // }, 5000)
-      begin(data)
+  // 判断地图是否加载完成的标志
+  var flag = true
+  viewer.clock.onTick.addEventListener(function(clock){
+    if(flag && viewer.terrainProvider.ready){
+      // 创建飞行轨迹和模型架构
+      $.ajax({
+        type: 'GET',
+        url: '.../../SampleData/data/5.json',
+        dataType: 'json',
+        success: function (data) {
+          data = data.gisVehiclePositions
+          console.log(data)
+          //执行创建方法
+          // setTimeout(function () {
+          //   //清除模型
+          //   viewer.entities.removeAll()
+          // }, 5000)
+          setTimeout(function () {
+              begin(data)
+          }, 2500)
+          flag = false
+        }
+      })
     }
   })
   // 所有函数组合
@@ -146,7 +167,7 @@
         viewer.clock.stopTime = endTime.clone();
         viewer.clock.currentTime = startTime.clone();
         viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
-        viewer.clock.multiplier = 10;
+        viewer.clock.multiplier = 5;
         //底部时间条控件调整
         viewer.timeline.zoomTo(startTime, endTime);
 
@@ -206,7 +227,7 @@
     })
   }
   // 创建监听设置高度和速度等相关信息
-  function createListener(result) {
+  function createListener(result, flag) {
     viewer.clock.onTick.addEventListener(function(clock){
       let tempTime = new Date(Cesium.JulianDate.toDate(clock.currentTime))
       if(result[tempTime] !== undefined){
@@ -237,14 +258,14 @@
     return localeDateTimeFormatter(time, viewModel, true);
   }
 
-  var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-        handler.setInputAction(function(click) {
-           // 处理鼠标按下事件
-           // 获取鼠标当前位置
-            var position = viewer.scene.camera.position.clone()
-            var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(position.x,position.y));
-            viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(position.x, position.y, Math.random()*(300,1000)));
-         }, Cesium.ScreenSpaceEventType.LEFT_UP);
+  // var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+  //       handler.setInputAction(function(click) {
+  //          // 处理鼠标按下事件
+  //          // 获取鼠标当前位置
+  //           var position = viewer.scene.camera.position.clone()
+  //           var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(position.x,position.y));
+  //           viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(position.x, position.y, Math.random()*(300,1000)));
+  //        }, Cesium.ScreenSpaceEventType.LEFT_UP);
   </script>
 </body>
 </html>
