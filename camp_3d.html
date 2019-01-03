@@ -258,14 +258,16 @@
     return localeDateTimeFormatter(time, viewModel, true);
   }
 
-  // var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-  //       handler.setInputAction(function(click) {
-  //          // 处理鼠标按下事件
-  //          // 获取鼠标当前位置
-  //           var position = viewer.scene.camera.position.clone()
-  //           var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(position.x,position.y));
-  //           viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(position.x, position.y, Math.random()*(300,1000)));
-  //        }, Cesium.ScreenSpaceEventType.LEFT_UP);
+  var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function(click) {
+           // 处理鼠标按下事件
+           // 获取鼠标当前位置
+           if(viewer.camera.pitch > -0.3){
+            var position = viewer.scene.camera.position.clone()
+            var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(position.x,position.y));
+            viewer.camera.lookAt(transform, new Cesium.Cartesian3(position.x, position.y, Math.random()*(300,1000)));
+           }
+         }, Cesium.ScreenSpaceEventType.LEFT_UP);
   </script>
 </body>
 </html>
