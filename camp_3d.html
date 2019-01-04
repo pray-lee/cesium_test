@@ -6,6 +6,7 @@
   <script src="./jquery.min.js"></script>
   <script src="./node_modules/cesium/Build/Cesium/Cesium.js"></script>
   <script src='./require.js'></script>
+  <script src="./canvas/speed.js" charset="utf-8"></script>
   <link rel="stylesheet" href="./node_modules/cesium/Build/Cesium/Widgets/widgets.css">
   <style>
   *{
@@ -24,6 +25,7 @@
 </head>
 <body>
   <div id="cesiumContainer" style="width: 100vw; height:100vh"></div>
+  <canvas id="speed"></canvas>
   <script>
   // init
   var viewer = new Cesium.Viewer('cesiumContainer', {
