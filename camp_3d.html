@@ -4,10 +4,12 @@
   <meta charset="utf-8">
   <title>cesium</title>
   <script src="./jquery.min.js"></script>
+  <script src="./lib/raphael.js"></script>
+  <script src="./lib/justgage.js"></script>
   <script src="./node_modules/cesium/Build/Cesium/Cesium.js"></script>
   <script src='./require.js'></script>
-  <script src="./canvas/speed.js" charset="utf-8"></script>
   <link rel="stylesheet" href="./node_modules/cesium/Build/Cesium/Widgets/widgets.css">
+  <link rel="stylesheet" href="./lib/height.css">
   <style>
   *{
     margin:0;
@@ -15,8 +17,12 @@
   }
   #speed{
     position:absolute;
+    width:200px;
+    height:150px;
     top:10px;
-    left:0
+    left:0;
+    background:rgba(0,0,0,.6);
+    z-index:9999
   }
   .cesium-viewer-bottom{
     display: none
@@ -24,252 +30,299 @@
   </style>
 </head>
 <body>
-  <div id="cesiumContainer" style="width: 100vw; height:100vh"></div>
-  <canvas id="speed"></canvas>
-  <script>
-  // init
-  var viewer = new Cesium.Viewer('cesiumContainer', {
-    // 天地图服务
-    imageryProvider : new Cesium.WebMapTileServiceImageryProvider({
+  <div id="speed" class="gauge"></div>
+  <div class="progress-wraper">
+    <div class="progress-container" id="prog">
+      <div class="progress" style="height: 0%">0</div>
+      <div class="progress-overlay"></div>
+    </div>
+    <div id="cesiumContainer" style="width: 100vw; height:100vh"></div>
+    <script>
+    //speed--------------------------------------------------------
+    var speed = new JustGage({
+      id: 'speed',
+      value: 0,
+      min: 0,
+      max: 100,
+      symbol: 'km/h',
+      // pointer: true,
+      gaugeWidthScale: 0.7,
+      // customSectors: [{
+      //   color : "#00ff00",
+      //   lo : 0,
+      //   hi : 60
+      // },{
+      //   color : "#ff0000",
+      //   lo : 60,
+      //   hi : 100
+      // }]  ,
+      counter: true,
+      valueFontColor: '#fff',
+      shadowOpacity: 1,
+      shadowSize: 3,
+      shadowVerticalOffset: 5
+    });
+    //height---------------------------------------------------
+      var $bar  = $(document).find('.progress')
+      function increment(height, maxHeight) {
+        //通过最大高度判断进度条的展示比例
+        var cssHeight = 250 * height / maxHeight
+        $bar.css('height', cssHeight + 'px')
+            .text(height + 'm');
+      }
+
+
+
+    // init
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+      // 天地图服务
+      imageryProvider : new Cesium.WebMapTileServiceImageryProvider({
         url: "http://t0.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles",
         layer: "tdtVecBasicLayer",
         style: "default",
         format: "image/jpeg",
         tileMatrixSetID: "GoogleMapsCompatible",
         show: false
-    }),
-    terrainExaggeration : 1, // 增加山的视觉效果（高度,值越大，高度越不准确）
-    terrainProvider: Cesium.createWorldTerrain({
-    }),
-    baseLayerPicker: false,
-    shouldAnimate : true,
-    timeline: true,
-    scene3DOnly:true,
-    homeButton: false, // home图标显示隐藏
-    navigationHelpButton: false, // 帮助按钮显示隐藏
-    geocoder: false // 搜索框显示隐藏
-  });
-  //天地图中文标记图层
-  viewer.imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
-    url: "http://t0.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg",
-    layer: "tdtAnnoLayer",
-    style: "default",
-    format: "image/jpeg",
-    tileMatrixSetID: "GoogleMapsCompatible",
-    show: false
-}));
-  viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000;//相机的高度的最小值
-  viewer.scene.screenSpaceCameraController.maximumZoomDistance = 22000000;  //相机高度的最大值
-  viewer.scene.screenSpaceCameraController._minimumZoomRate = 300; // 设置相机缩小时的速率
-  viewer.scene.screenSpaceCameraController._maximumZoomRate=5906376272000    //设置相机放大时的速率
-  // viewer.scene.globe.depthTestAgainstTerrain = true;
-  // 给地图家光线
-  viewer.scene.globe.enableLighting = true;
-  // 地球旋转
-  (function () {
-    window.requestAnimationFrame = (function(){
-      return  window.requestAnimationFrame       ||
-      window.webkitRequestAnimationFrame ||
-      window.mozRequestAnimationFrame    ||
-      window.oRequestAnimationFrame      ||
-      window.msRequestAnimationFrame     ||
-      function( callback ){
-        window.setTimeout(callback, 1000 / 60);
-      };
-    })();
-    // requestAnimation实现地球转动
-    function doEarthRotate() {
-      viewer.camera.rotateRight(0.0005)
+      }),
+      terrainExaggeration : 1, // 增加山的视觉效果（高度,值越大，高度越不准确）
+      terrainProvider: Cesium.createWorldTerrain({
+      }),
+      baseLayerPicker: false,
+      shouldAnimate : true,
+      timeline: true,
+      scene3DOnly:true,
+      homeButton: false, // home图标显示隐藏
+      navigationHelpButton: false, // 帮助按钮显示隐藏
+      geocoder: false // 搜索框显示隐藏
+    });
+    //天地图中文标记图层
+    viewer.imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
+      url: "http://t0.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg",
+      layer: "tdtAnnoLayer",
+      style: "default",
+      format: "image/jpeg",
+      tileMatrixSetID: "GoogleMapsCompatible",
+      show: false
+    }));
+    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000;//相机的高度的最小值
+    viewer.scene.screenSpaceCameraController.maximumZoomDistance = 22000000;  //相机高度的最大值
+    viewer.scene.screenSpaceCameraController._minimumZoomRate = 300; // 设置相机缩小时的速率
+    viewer.scene.screenSpaceCameraController._maximumZoomRate=5906376272000    //设置相机放大时的速率
+    // viewer.scene.globe.depthTestAgainstTerrain = true;
+    // 给地图家光线
+    viewer.scene.globe.enableLighting = true;
+    // 地球旋转
+    (function () {
+      window.requestAnimationFrame = (function(){
+        return  window.requestAnimationFrame       ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame    ||
+        window.oRequestAnimationFrame      ||
+        window.msRequestAnimationFrame     ||
+        function( callback ){
+          window.setTimeout(callback, 1000 / 60);
+        };
+      })();
+      // requestAnimation实现地球转动
+      function doEarthRotate() {
+        viewer.camera.rotateRight(0.0005)
+        requestAnimationFrame(doEarthRotate)
+      }
       requestAnimationFrame(doEarthRotate)
-    }
-    requestAnimationFrame(doEarthRotate)
-  })()
-  // 判断地图是否加载完成的标志
-  var flag = true
-  viewer.clock.onTick.addEventListener(function(clock){
-    if(flag && viewer.terrainProvider.ready){
-      // 创建飞行轨迹和模型架构
-      $.ajax({
-        type: 'GET',
-        url: '.../../SampleData/data/5.json',
-        dataType: 'json',
-        success: function (data) {
-          data = data.gisVehiclePositions
-          console.log(data)
-          //执行创建方法
-          // setTimeout(function () {
-          //   //清除模型
-          //   viewer.entities.removeAll()
-          // }, 5000)
-          setTimeout(function () {
+    })()
+    // 判断地图是否加载完成的标志
+    var flag = true
+    viewer.clock.onTick.addEventListener(function(clock){
+      if(flag && viewer.terrainProvider.ready){
+        // 创建飞行轨迹和模型架构
+        $.ajax({
+          type: 'GET',
+          url: '.../../SampleData/data/5.json',
+          dataType: 'json',
+          success: function (data) {
+            data = data.gisVehiclePositions
+            console.log(data)
+            //执行创建方法
+            // setTimeout(function () {
+            //   //清除模型
+            //   viewer.entities.removeAll()
+            // }, 5000)
+            setTimeout(function () {
               begin(data)
-          }, 2500)
-          flag = false
+            }, 2500)
+            flag = false
+          }
+        })
+      }
+    })
+    // 所有函数组合
+    function begin (data) {
+      var result = formatData(data)
+      var option = createDataModel(result)
+      //创建动画
+      createAnimation(option)
+      //创建监听
+      createListener(result)
+    }
+    //数据重组
+    function formatData(data) {
+      //数据重组
+      var dataObj = {}
+      var getHeightMaxArr = []
+      data.forEach(function(item){
+        getHeightMaxArr.push(parseInt(item.height))
+        dataObj[new Date(item.reportTime)] = {
+          lat: item.lat,
+          lon: item.longit,
+          speed: item.speed,
+          height: item.height
+        }
+      })
+      //获取最大高度,做动画用
+      var maxHeight = Math.max.apply(null, getHeightMaxArr)
+      return {
+        maxHeight:maxHeight,
+        data: dataObj,
+        keys: Object.keys(dataObj)
+      }
+    }
+    //构造飞行轨迹初始化数据
+    function createDataModel(result) {
+      var option = {}
+      option.startTime = Cesium.JulianDate.fromDate(new Date(result.keys[0]))
+      option.endTime = Cesium.JulianDate.fromDate(new Date(result.keys[result.keys.length-1]))
+      option.cameraInitData = result.data[result.keys[0]]
+      // 设置position
+      var property = new Cesium.SampledPositionProperty()
+      result.keys.forEach(item => {
+        var time = Cesium.JulianDate.fromDate(new Date(item))
+        var position = Cesium.Cartesian3.fromDegrees(result.data[item].lon, result.data[item].lat, Number(result.data[item].height))
+        property.addSample(time, position)
+      })
+      option.position = property
+      return option
+    }
+    //创建动画及模型
+    function createAnimation({startTime, endTime, position, cameraInitData}){
+      // 飞到轨迹的开始位置
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(cameraInitData.lon, cameraInitData.lat, Number(cameraInitData.height)+500),
+        orientation: {
+          roll:0.0
+        },
+        complete: function () {
+          // 时间轴时间转换成人能看懂的
+          viewer.animation.viewModel.dateFormatter = localeDateTimeFormatter
+          viewer.animation.viewModel.timeFormatter = localeTimeFormatter
+          viewer.timeline.makeLabel = function (time) { return localeDateTimeFormatter(time) }
+          // 运动时间相关
+          viewer.clock.startTime = startTime.clone();
+          viewer.clock.stopTime = endTime.clone();
+          viewer.clock.currentTime = startTime.clone();
+          viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
+          viewer.clock.multiplier = 5;
+          //底部时间条控件调整
+          viewer.timeline.zoomTo(startTime, endTime);
+
+          var entity = viewer.entities.add({
+
+            //设置开始时间和结束时间
+            availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+              start: startTime,
+              stop: endTime
+            })]),
+
+            //飞行轨迹数据
+            position: position,
+
+            // 设置机头方向和路径方向一致
+            orientation: new Cesium.VelocityOrientationProperty(position),
+
+            // 飞行器模型
+            model: {
+              uri: '.../../SampleData/models/drone.gltf',
+              minimumPixelSize: 64,
+            },
+            //路径的相关样式
+            path: {
+              resolution : 1,
+              material : new Cesium.PolylineGlowMaterialProperty({
+                glowPower : 0.5,
+                color : Cesium.Color.YELLOW
+              }),
+              width :5,
+              leadTime : 0,
+              trailTime : 100000,
+            }
+          })
+
+          //设置飞行轨迹圆滑程度
+          //Add button to track the entity as it moves
+          //设置弧度(有直角)
+          // entity.position.setInterpolationOptions({
+          //         interpolationDegree : 1,
+          //         interpolationAlgorithm : Cesium.LinearApproximation
+          //     });
+          //设置弧度圆角
+          entity.position.setInterpolationOptions({
+            interpolationDegree : 5,
+            interpolationAlgorithm : Cesium.LagrangePolynomialApproximation
+          });
+          //也是设置弧度(圆角)
+          // entity.position.setInterpolationOptions({
+          //   interpolationDegree : 2,
+          //   interpolationAlgorithm : Cesium.HermitePolynomialApproximation
+          // });
+
+          // 设置跟踪模型
+          viewer.trackedEntity = entity
         }
       })
     }
-  })
-  // 所有函数组合
-  function begin (data) {
-    var result = formatData(data)
-    var option = createDataModel(result)
-    //创建动画
-    createAnimation(option)
-    //创建监听
-    createListener(result.data)
-  }
-  //数据重组
-  function formatData(data) {
-    //数据重组
-    var dataObj = {}
-    data.forEach(function(item){
-      dataObj[new Date(item.reportTime)] = {
-        lat: item.lat,
-        lon: item.longit,
-        speed: item.speed,
-        height: item.height
-      }
-    })
-    return {
-      data: dataObj,
-      keys: Object.keys(dataObj)
+    // 创建监听设置高度和速度等相关信息
+    function createListener(result) {
+      viewer.clock.onTick.addEventListener(function(clock){
+        let tempTime = new Date(Cesium.JulianDate.toDate(clock.currentTime))
+        if(result.data[tempTime] !== undefined){
+          speed.refresh(result.data[tempTime].speed)
+          increment(Number(result.data[tempTime].height).toFixed(0), result.maxHeight)
+        }
+      })
     }
-  }
-  //构造飞行轨迹初始化数据
-  function createDataModel(result) {
-    var option = {}
-    option.startTime = Cesium.JulianDate.fromDate(new Date(result.keys[0]))
-    option.endTime = Cesium.JulianDate.fromDate(new Date(result.keys[result.keys.length-1]))
-    option.cameraInitData = result.data[result.keys[0]]
-    // 设置position
-    var property = new Cesium.SampledPositionProperty()
-    result.keys.forEach(item => {
-      var time = Cesium.JulianDate.fromDate(new Date(item))
-      var position = Cesium.Cartesian3.fromDegrees(result.data[item].lon, result.data[item].lat, Number(result.data[item].height))
-      property.addSample(time, position)
-    })
-    option.position = property
-    return option
-  }
-  //创建动画及模型
-  function createAnimation({startTime, endTime, position, cameraInitData}){
-    // 飞到轨迹的开始位置
-    viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(cameraInitData.lon, cameraInitData.lat, Number(cameraInitData.height)+500),
-      orientation: {
-        roll:0.0
-      },
-      complete: function () {
-        // 时间轴时间转换成人能看懂的
-        viewer.animation.viewModel.dateFormatter = localeDateTimeFormatter
-        viewer.animation.viewModel.timeFormatter = localeTimeFormatter
-        viewer.timeline.makeLabel = function (time) { return localeDateTimeFormatter(time) }
-        // 运动时间相关
-        viewer.clock.startTime = startTime.clone();
-        viewer.clock.stopTime = endTime.clone();
-        viewer.clock.currentTime = startTime.clone();
-        viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
-        viewer.clock.multiplier = 5;
-        //底部时间条控件调整
-        viewer.timeline.zoomTo(startTime, endTime);
 
-        var entity = viewer.entities.add({
-
-          //设置开始时间和结束时间
-          availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
-            start: startTime,
-            stop: endTime
-          })]),
-
-          //飞行轨迹数据
-          position: position,
-
-          // 设置机头方向和路径方向一致
-          orientation: new Cesium.VelocityOrientationProperty(position),
-
-          // 飞行器模型
-          model: {
-            uri: '.../../SampleData/models/drone.gltf',
-            minimumPixelSize: 64,
-          },
-          //路径的相关样式
-          path: {
-            resolution : 1,
-            material : new Cesium.PolylineGlowMaterialProperty({
-              glowPower : 0.5,
-              color : Cesium.Color.YELLOW
-            }),
-            width :5,
-            leadTime : 0,
-            trailTime : 100000,
-          }
-        })
-
-        //设置飞行轨迹圆滑程度
-        //Add button to track the entity as it moves
-        //设置弧度(有直角)
-        // entity.position.setInterpolationOptions({
-        //         interpolationDegree : 1,
-        //         interpolationAlgorithm : Cesium.LinearApproximation
-        //     });
-        //设置弧度圆角
-        entity.position.setInterpolationOptions({
-          interpolationDegree : 5,
-          interpolationAlgorithm : Cesium.LagrangePolynomialApproximation
-        });
-        //也是设置弧度(圆角)
-        // entity.position.setInterpolationOptions({
-        //   interpolationDegree : 2,
-        //   interpolationAlgorithm : Cesium.HermitePolynomialApproximation
-        // });
-
-        // 设置跟踪模型
-        viewer.trackedEntity = entity
+    // 时间轴转换方法
+    function localeDateTimeFormatter(datetime, viewModel, ignoredate) {
+      var julianDT = new Cesium.JulianDate();
+      Cesium.JulianDate.addHours(datetime,8,julianDT)
+      var gregorianDT= Cesium.JulianDate.toGregorianDate(julianDT)
+      var objDT;
+      if (ignoredate)
+      objDT = '';
+      else {
+        objDT = new Date(gregorianDT.year, gregorianDT.month - 1, gregorianDT.day);
+        objDT = gregorianDT.year  + '年' +objDT.toLocaleString("zh-cn", { month: "short" })+ gregorianDT.day + '日' ;
+        if (viewModel || gregorianDT.hour + gregorianDT.minute === 0)
+        return objDT;
+        objDT += ' ';
       }
-    })
-  }
-  // 创建监听设置高度和速度等相关信息
-  function createListener(result, flag) {
-    viewer.clock.onTick.addEventListener(function(clock){
-      let tempTime = new Date(Cesium.JulianDate.toDate(clock.currentTime))
-      if(result[tempTime] !== undefined){
-        // console.log(result[tempTime].height)
-      }
-    })
-  }
-
-  // 时间轴转换方法
-  function localeDateTimeFormatter(datetime, viewModel, ignoredate) {
-    var julianDT = new Cesium.JulianDate();
-    Cesium.JulianDate.addHours(datetime,8,julianDT)
-    var gregorianDT= Cesium.JulianDate.toGregorianDate(julianDT)
-    var objDT;
-    if (ignoredate)
-    objDT = '';
-    else {
-      objDT = new Date(gregorianDT.year, gregorianDT.month - 1, gregorianDT.day);
-      objDT = gregorianDT.year  + '年' +objDT.toLocaleString("zh-cn", { month: "short" })+ gregorianDT.day + '日' ;
-      if (viewModel || gregorianDT.hour + gregorianDT.minute === 0)
-      return objDT;
-      objDT += ' ';
+      return objDT + Cesium.sprintf("%02d:%02d:%02d", gregorianDT.hour, gregorianDT.minute, gregorianDT.second);
     }
-    return objDT + Cesium.sprintf("%02d:%02d:%02d", gregorianDT.hour, gregorianDT.minute, gregorianDT.second);
-  }
 
-  function localeTimeFormatter(time, viewModel) {
-    return localeDateTimeFormatter(time, viewModel, true);
-  }
+    function localeTimeFormatter(time, viewModel) {
+      return localeDateTimeFormatter(time, viewModel, true);
+    }
 
-  var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-        handler.setInputAction(function(click) {
-           // 处理鼠标按下事件
-           // 获取鼠标当前位置
-           if(viewer.camera.pitch > -0.3){
-            var position = viewer.scene.camera.position.clone()
-            var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(position.x,position.y));
-            viewer.camera.lookAt(transform, new Cesium.Cartesian3(position.x, position.y, Math.random()*(300,1000)));
-           }
-         }, Cesium.ScreenSpaceEventType.LEFT_UP);
-  </script>
-</body>
-</html>
+    var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction(function(click) {
+      // 处理鼠标按下事件
+      // 获取鼠标当前位置
+      // if(viewer.camera.pitch > -0.3){
+      //  var position = viewer.scene.camera.position.clone()
+      //  var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(position.x,position.y));
+      //  viewer.camera.lookAt(transform, new Cesium.Cartesian3(position.x, position.y, Math.random()*(300,1000)));
+      // }
+    }, Cesium.ScreenSpaceEventType.LEFT_UP);
+
+    </script>
+  </body>
+  </html>
