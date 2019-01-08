@@ -7,7 +7,8 @@
   <script src="./lib/raphael.js"></script>
   <script src="./lib/justgage.js"></script>
   <script src="./node_modules/cesium/Build/Cesium/Cesium.js"></script>
-  <script src='./require.js'></script>
+  <script src="./node_modules/cesium-navigation/navigation.js"></script>
+  <!-- <script src='./require.js'></script> -->
   <link rel="stylesheet" href="./node_modules/cesium/Build/Cesium/Widgets/widgets.css">
   <link rel="stylesheet" href="./lib/height.css">
   <style>
@@ -15,7 +16,11 @@
     margin:0;
     padding:0
   }
+  .progress-wraper{
+    display:none
+  }
   #speed{
+    display:none;
     position:absolute;
     width:200px;
     height:150px;
@@ -36,6 +41,7 @@
       <div class="progress" style="height: 0%">0</div>
       <div class="progress-overlay"></div>
     </div>
+  </div>
     <div id="cesiumContainer" style="width: 100vw; height:100vh"></div>
     <script>
     //speed--------------------------------------------------------
@@ -95,6 +101,8 @@
       navigationHelpButton: false, // 帮助按钮显示隐藏
       geocoder: false // 搜索框显示隐藏
     });
+    //指南针
+    viewer.extend(Cesium.viewerCesiumNavigationMixin, {})
     //天地图中文标记图层
     viewer.imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
       url: "http://t0.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg",
