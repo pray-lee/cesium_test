@@ -16,7 +16,7 @@
     margin:0;
     padding:0
   }
-  .progress-wraper{
+  .progress-wrapper{
     display:none
   }
   #speed{
@@ -36,7 +36,7 @@
 </head>
 <body>
   <div id="speed" class="gauge"></div>
-  <div class="progress-wraper">
+  <div class="progress-wrapper">
     <div class="progress-container" id="prog">
       <div class="progress" style="height: 0%">0</div>
       <div class="progress-overlay"></div>
@@ -102,7 +102,7 @@
       geocoder: false // 搜索框显示隐藏
     });
     //指南针,地图比例
-    viewer.extend(Cesium.viewerCesiumNavigationMixin, {})
+    viewer.extend(Cesium.viewerCesiumNavigationMixin, {});
     //天地图中文标记图层
     viewer.imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
       url: "http://t0.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg",
@@ -112,10 +112,8 @@
       tileMatrixSetID: "GoogleMapsCompatible",
       show: false
     }));
-    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000;//相机的高度的最小值
+    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 500;//相机的高度的最小值
     viewer.scene.screenSpaceCameraController.maximumZoomDistance = 22000000;  //相机高度的最大值
-    viewer.scene.screenSpaceCameraController._minimumZoomRate = 300; // 设置相机缩小时的速率
-    viewer.scene.screenSpaceCameraController._maximumZoomRate=5906376272000    //设置相机放大时的速率
     // viewer.scene.globe.depthTestAgainstTerrain = true;
     // 给地图家光线
     viewer.scene.globe.enableLighting = true;
@@ -137,9 +135,9 @@
         requestAnimationFrame(doEarthRotate)
       }
       requestAnimationFrame(doEarthRotate)
-    })()
+    })();
     // 判断地图是否加载完成的标志
-    var flag = true
+    var flag = true;
     viewer.clock.onTick.addEventListener(function(clock){
       if(flag && viewer.terrainProvider.ready){
         // 创建飞行轨迹和模型架构
@@ -148,8 +146,8 @@
           url: '.../../SampleData/data/5.json',
           dataType: 'json',
           success: function (data) {
-            data = data.gisVehiclePositions
-            console.log(data)
+            data = data.gisVehiclePositions;
+            console.log(data);
             //执行创建方法
             // setTimeout(function () {
             //   //清除模型
@@ -157,8 +155,8 @@
             // }, 5000)
             setTimeout(function () {
               begin(data)
-            }, 2500)
-            flag = false
+            }, 2500);
+            flag = false;
           }
         })
       }
@@ -214,10 +212,10 @@
     function createAnimation({startTime, endTime, position, cameraInitData}){
       // 飞到轨迹的开始位置
       viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(cameraInitData.lon, cameraInitData.lat, Number(cameraInitData.height)+500),
-        orientation: {
-          roll:0.0
-        },
+        destination: Cesium.Cartesian3.fromDegrees(cameraInitData.lon, cameraInitData.lat, Number(cameraInitData.height)),
+        // orientation: {
+        //   roll:0.0
+        // },
         complete: function () {
           // 时间轴时间转换成人能看懂的
           viewer.animation.viewModel.dateFormatter = localeDateTimeFormatter
@@ -249,7 +247,7 @@
             // 飞行器模型
             model: {
               uri: '.../../SampleData/models/drone.gltf',
-              minimumPixelSize: 64,
+              minimumPixelSize: 48,
             },
             //路径的相关样式
             path: {
@@ -262,7 +260,7 @@
               leadTime : 0,
               trailTime : 100000,
             }
-          })
+          });
 
           //设置飞行轨迹圆滑程度
           //Add button to track the entity as it moves
@@ -319,18 +317,11 @@
     function localeTimeFormatter(time, viewModel) {
       return localeDateTimeFormatter(time, viewModel, true);
     }
-
-    var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-    handler.setInputAction(function(click) {
-      // 处理鼠标按下事件
-      // 获取鼠标当前位置
-      // if(viewer.camera.pitch > -0.3){
-      //  var position = viewer.scene.camera.position.clone()
-      //  var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(position.x,position.y));
-      //  viewer.camera.lookAt(transform, new Cesium.Cartesian3(position.x, position.y, Math.random()*(300,1000)));
-      // }
-    }, Cesium.ScreenSpaceEventType.LEFT_UP);
-
+    // 拖动地图设置角度不进入地下
+    viewer.clock.onTick.addEventListener(function () {
+      if(viewer.camera.pitch>-0.4)
+        viewer.camera.rotateUp(-0.03)
+    });
     </script>
   </body>
   </html>

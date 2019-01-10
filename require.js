@@ -3,10 +3,10 @@
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
-//Not using strict: uneven strict support in browsers, #392, and causes
-//problems with requirejs.exec()/transpiler plugins that may not be strict.
-/*jslint regexp: true, nomen: true, sloppy: true */
-/*global window, navigator, document, importScripts, setTimeout, opera */
+// Not using strict: uneven strict support in browsers, #392, and causes
+// problems with requirejs.exec()/transpiler plugins that may not be strict.
+/* jslint regexp: true, nomen: true, sloppy: true */
+/* global window, navigator, document, importScripts, setTimeout, opera */
 
 var requirejs, require, define;
 (function (global) {
