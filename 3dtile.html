@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="./node_modules/cesium/Build/Cesium/Cesium.js"></script>
+    <script src="./node_modules/cesium-navigation/navigation.js"></script>
+    <!-- <script src='./require.js'></script> -->
+    <link rel="stylesheet" href="./node_modules/cesium/Build/Cesium/Widgets/widgets.css">
+    <title>Document</title>
+</head>
+<body>
+    <div id="cesiumContainer" style="width:100vw;height:100vh"></div>
+    <script>
+        var viewer = new Cesium.Viewer('cesiumContainer');
+        var city = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3839) }));
+        // Adjust the tileset height so its not floating above terrain
+        var heightOffset = -32;
+        viewer.zoomTo(city)
+    </script>
+</body>
+</html>

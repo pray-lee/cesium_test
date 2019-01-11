@@ -1,12 +1,18 @@
+.progress-wrapper{
+  z-index:99999;
+  position:absolute;
+  right:75px;
+  top:25vh;
+}
 .progress-container, .progress {
   border-radius: 5px;
 }
 
 .progress-container {
-  width: 82px;
+  width: 62px;
   height: 250px;
   border: solid 1px #111;
-  background: #151515;
+  background: rgba(0,0,6,.5);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   margin: 0 auto;
   position: relative;
@@ -27,13 +33,14 @@
 }
 
 .progress {
-  width: 80px;
-  background: #ff6700;
+  width: 60px;
+  background: darkslategrey;
+  opacity:20;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
   z-index: 1;
   bottom: 0;
   text-align: center;
-  color: #151515;
+  color: #fff;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
   font-weight: bold;
   transition: all 250ms ease;
@@ -74,7 +81,7 @@
   width: 0;
   height: 100%;
   bottom: 0;
-  left: 15px;
+  left: 7px;
   border: solid 20px transparent;
   border-width: 0 25px 20px 25px;
   border-bottom-color: rgba(255, 255, 255, 0.25);
