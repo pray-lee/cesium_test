@@ -104,9 +104,9 @@
         // tileMatrixSetID: "GoogleMapsCompatible",
         // show: false
       }),
-      terrainExaggeration: 1, // 增加山的视觉效果（高度,值越大，高度越不准确）
-      terrainProvider: Cesium.createWorldTerrain({
-      }),
+      // terrainExaggeration: 1, // 增加山的视觉效果（高度,值越大，高度越不准确）
+      // terrainProvider: Cesium.createWorldTerrain({
+      // }),
       baseLayerPicker: false,
       shouldAnimate: true,
       timeline: true,
@@ -125,7 +125,7 @@
     //指南针,地图比例
     viewer.extend(Cesium.viewerCesiumNavigationMixin, {});
     // 设置相机相关
-    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 500; //相机的高度的最小值
+    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 100; //相机的高度的最小值
     viewer.scene.screenSpaceCameraController.maximumZoomDistance = 22000000; //相机高度的最大值
     // viewer.scene.globe.depthTestAgainstTerrain = true;
     // 给地图家光线
@@ -267,8 +267,8 @@
 
             // 飞行器模型
             model: {
-              uri: '.../../SampleData/models/drone.gltf',
-              minimumPixelSize: 48,
+              uri: '.../../SampleData/models/aircraft/scene.gltf',
+              minimumPixelSize: 80,
             },
             //路径的相关样式
             path: {

@@ -1,4 +1,5 @@
 {
-  "editor.fontSize": 14,
-  "editor.fontFamily": "UbuntuMono Nerd Font, Menlo, Monaco, 'Courier New', monospace"
+  "editor.fontSize": 11,
+  "editor.fontFamily": "SF Mono, Menlo, Monaco, 'Courier New', monospace",
+  "editor.lineNumbers": "off"
 }
